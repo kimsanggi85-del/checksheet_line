@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>현장 점검시트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+  :root {
+    --navy: #1a2744;
+    --blue: #2c5fad;
+    --light-blue: #e8f0fe;
+    --red: #d63031;
+    --green: #00a86b;
+    --yellow: #f39c12;
+    --gray: #636e72;
+    --light-gray: #f1f3f5;
+    --white: #ffffff;
+    --border: #dde1e6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--light-gray);
+    color: #2d3436;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .sheet {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  /* 헤더 */
+  .header {
+    background: var(--navy);
+    color: var(--white);
+    padding: 24px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .header .badge {
+    background: var(--blue);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* 기본정보 */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-bottom: 2px solid var(--navy);
+  }
+  .info-cell {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .info-cell:nth-child(even) { border-right: none; }
+  .info-cell label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    white-space: nowrap;
+    min-width: 70px;
+  }
+  .info-cell input, .info-cell select {
+    flex: 1;
+    border: none;
+    border-bottom: 1.5px solid var(--border);
+    padding: 6px 4px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .info-cell input:focus, .info-cell select:focus {
+    border-bottom-color: var(--blue);
+  }
+
+  /* 점검 테이블 */
+  .check-section {
+    padding: 20px;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--navy);
+    margin-bottom: 12px;
+    padding-left: 10px;
+    border-left: 4px solid var(--blue);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+  thead th {
+    background: var(--navy);
+    color: var(--white);
+    padding: 10px 12px;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: center;
+  }
+  thead th:first-child { text-align: left; }
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    vertical-align: middle;
+  }
+  tbody td:first-child {
+    text-align: left;
+    font-weight: 500;
+  }
+  tbody tr:hover { background: var(--light-blue); }
+
+  /* 라디오 버튼 커스텀 */
+  .radio-group {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+  .radio-group input[type="radio"] { display: none; }
+  .radio-group label {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .radio-group label:hover { transform: scale(1.1); }
+  .radio-group input.good:checked + label {
+    background: var(--green); color: var(--white); border-color: var(--green);
+  }
+  .radio-group input.avg:checked + label {
+    background: var(--yellow); color: var(--white); border-color: var(--yellow);
+  }
+  .radio-group input.bad:checked + label {
+    background: var(--red); color: var(--white); border-color: var(--red);
+  }
+  .radio-group input.na:checked + label {
+    background: var(--gray); color: var(--white); border-color: var(--gray);
+  }
+
+  /* 비고 입력 */
+  td input.remark {
+    width: 100%;
+    border: none;
+    border-bottom: 1px dashed var(--border);
+    padding: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    text-align: center;
+  }
+  td input.remark:focus { border-bottom-color: var(--blue); }
+
+  /* 종합의견 */
+  .summary-section {
+    padding: 0 20px 20px;
+  }
+  .summary-section textarea {
+    width: 100%;
+    height: 80px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .summary-section textarea:focus { border-color: var(--blue); }
+
+  /* 서명란 */
+  .sign-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding: 20px;
+    border-top: 2px solid var(--navy);
+  }
+  .sign-box {
+    text-align: center;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .sign-box .role {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray);
+    margin-bottom: 8px;
+  }
+  .sign-box .sign-line {
+    border-bottom: 1.5px solid var(--navy);
+    height: 36px;
+    margin: 0 16px;
+  }
+
+  /* 버튼 */
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding: 20px;
+    background: var(--light-gray);
+  }
+  .btn {
+    padding: 12px 32px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-print {
+    background: var(--navy);
+    color: var(--white);
+  }
+  .btn-print:hover { background: var(--blue); }
+  .btn-reset {
+    background: var(--white);
+    color: var(--gray);
+    border: 2px solid var(--border);
+  }
+  .btn-reset:hover { background: var(--light-gray); }
+
+  /* 통계 바 */
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--light-blue);
+    border-radius: 6px;
+    margin: 0 20px 16px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .stat-item { display: flex; align-items: center; gap: 6px; }
+  .stat-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .dot-good { background: var(--green); }
+  .dot-avg { background: var(--yellow); }
+  .dot-bad { background: var(--red); }
+  .dot-na { background: var(--gray); }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .sheet { box-shadow: none; }
+    .actions { display: none; }
+    tbody tr:hover { background: none; }
+    @page { margin: 10mm; }
+  }
+
+  @media (max-width: 600px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .info-cell { border-right: none; }
+    .sign-area { grid-template-columns: 1fr; }
+    .header { flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="header">
+    <h1>현장 점검시트</h1>
+    <div class="badge">품질관리</div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-cell">
+      <label>점검일자</label>
+      <input type="date" id="inspDate">
+    </div>
+    <div class="info-cell">
+      <label>점검자</label>
+      <input type="text" placeholder="이름 입력">
+    </div>
+    <div class="info-cell">
+      <label>점검구역</label>
+      <input type="text" placeholder="구역/라인명">
+    </div>
+    <div class="info-cell">
+      <label>점검유형</label>
+      <select>
+        <option>정기점검</option>
+        <option>수시점검</option>
+        <option>특별점검</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 점검항목 -->
+  <div class="check-section">
+    <div class="section-title">안전 및 환경</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40%">점검 항목</th>
+          <th style="width:30%">판정</th>
+          <th style="width:30%">비고</th>
+        </tr>
+      </thead>
+      <tbody id="safetyBody"></tbody>
+    </table>
+
+    <div class="section-title">설비 및 공정</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40%">점검 항목</th>
+          <th style="width:30%">판정</th>
+          <th style="width:30%">비고</th>
+        </tr>
+      </thead>
+      <tbody id="equipBody"></tbody>
+    </table>
+
+    <div class="section-title">품질 관리</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40%">점검 항목</th>
+          <th style="width:30%">판정</th>
+          <th style="width:30%">비고</th>
+        </tr>
+      </thead>
+      <tbody id="qualityBody"></tbody>
+    </table>
+
+    <!-- 통계 -->
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-dot dot-good"></div>양호 <span id="cntGood">0</span></div>
+      <div class="stat-item"><div class="stat-dot dot-avg"></div>보통 <span id="cntAvg">0</span></div>
+      <div class="stat-item"><div class="stat-dot dot-bad"></div>불량 <span id="cntBad">0</span></div>
+      <div class="stat-item"><div class="stat-dot dot-na"></div>N/A <span id="cntNa">0</span></div>
+    </div>
+  </div>
+
+  <!-- 종합의견 -->
+  <div class="summary-section">
+    <div class="section-title" style="margin-bottom:10px;">종합 의견 / 시정 조치사항</div>
+    <textarea placeholder="점검 결과에 대한 종합 의견 및 시정 조치사항을 기재하세요."></textarea>
+  </div>
+
+  <!-- 서명 -->
+  <div class="sign-area">
+    <div class="sign-box">
+      <div class="role">점검자</div>
+      <div class="sign-line"></div>
+    </div>
+    <div class="sign-box">
+      <div class="role">확인자</div>
+      <div class="sign-line"></div>
+    </div>
+    <div class="sign-box">
+      <div class="role">승인자</div>
+      <div class="sign-line"></div>
+    </div>
+  </div>
+
+  <!-- 버튼 -->
+  <div class="actions">
+    <button class="btn btn-print" onclick="window.print()">인쇄</button>
+    <button class="btn btn-reset" onclick="resetAll()">초기화</button>
+  </div>
+</div>
+
+<script>
+  // 점검 항목 데이터
+  const sections = {
+    safetyBody: [
+      "작업장 정리정돈(5S) 상태",
+      "안전보호구 착용 여부",
+      "소화기 비치 및 유효기간",
+      "비상구/대피로 확보 상태",
+      "환기 및 조명 상태",
+    ],
+    equipBody: [
+      "설비 가동 상태 이상 유무",
+      "일상점검 기록 작성 여부",
+      "윤활유/소모품 교체 상태",
+      "계측기 교정 유효기간",
+      "이상 발생 시 조치 기록",
+    ],
+    qualityBody: [
+      "작업표준서 비치 및 준수",
+      "초물/중물/종물 검사 실시",
+      "불량품 격리 및 식별표시",
+      "공정 파라미터 기준 준수",
+      "기록/문서 관리 상태",
+    ]
+  };
+
+  let counter = 0;
+
+  function createRow(item) {
+    const id = counter++;
+    return `<tr>
+      <td>${item}</td>
+      <td>
+        <div class="radio-group">
+          <input type="radio" class="good" name="chk${id}" id="g${id}" onchange="updateStats()">
+          <label for="g${id}" title="양호">◯</label>
+          <input type="radio" class="avg" name="chk${id}" id="a${id}" onchange="updateStats()">
+          <label for="a${id}" title="보통">△</label>
+          <input type="radio" class="bad" name="chk${id}" id="b${id}" onchange="updateStats()">
+          <label for="b${id}" title="불량">✕</label>
+          <input type="radio" class="na" name="chk${id}" id="n${id}" onchange="updateStats()">
+          <label for="n${id}" title="N/A">-</label>
+        </div>
+      </td>
+      <td><input type="text" class="remark" placeholder="—"></td>
+    </tr>`;
+  }
+
+  // 테이블 생성
+  for (const [bodyId, items] of Object.entries(sections)) {
+    document.getElementById(bodyId).innerHTML = items.map(createRow).join('');
+  }
+
+  // 오늘 날짜 기본값
+  document.getElementById('inspDate').valueAsDate = new Date();
+
+  // 통계 업데이트
+  function updateStats() {
+    const counts = { good: 0, avg: 0, bad: 0, na: 0 };
+    document.querySelectorAll('input.good:checked').forEach(() => counts.good++);
+    document.querySelectorAll('input.avg:checked').forEach(() => counts.avg++);
+    document.querySelectorAll('input.bad:checked').forEach(() => counts.bad++);
+    document.querySelectorAll('input.na:checked').forEach(() => counts.na++);
+    document.getElementById('cntGood').textContent = counts.good;
+    document.getElementById('cntAvg').textContent = counts.avg;
+    document.getElementById('cntBad').textContent = counts.bad;
+    document.getElementById('cntNa').textContent = counts.na;
+  }
+
+  // 초기화
+  function resetAll() {
+    if (!confirm('모든 입력을 초기화하시겠습니까?')) return;
+    document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[type="text"], textarea').forEach(i => i.value = '');
+    document.getElementById('inspDate').valueAsDate = new Date();
+    document.querySelector('select').selectedIndex = 0;
+    updateStats();
+  }
+</script>
+
+</body>
+</html>
