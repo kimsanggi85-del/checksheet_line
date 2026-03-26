@@ -134,7 +134,7 @@
 <div class="action-bar"><button class="ab-reset" onclick="resetAll()">🔄 해제</button><button class="ab-dl" id="dlBtn" onclick="downloadXlsx()" disabled>📥 엑셀</button><button class="ab-ng" onclick="downloadNgReport()">📋 NG레포트</button></div>
 <div class="tabs" id="tabBar"></div>
 <div id="panels"></div>
-<div class="pnl" id="layH"><div class="hcard"><div class="htit">📋 점검 이력</div><div id="histList"><div class="hempty">아직 점검 이력이 없습니다</div></div></div></div>
+<div class="pnl" id="layH"><div class="hcard"><div class="htit">📋 점검 이력</div><div id="histList"><div class="hempty">아직 점검 이력이 없습니다</div></div><div style="display:flex;gap:6px;margin-top:10px"><button onclick="clearAllHist()" style="flex:1;padding:8px;border:1.5px solid #ffcdd2;border-radius:8px;background:#fff;color:var(--ng);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🗑 전체 이력 삭제</button><button onclick="clearAllNgRpt()" style="flex:1;padding:8px;border:1.5px solid #ffcdd2;border-radius:8px;background:#fff;color:var(--ng);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🗑 전체 NG레포트 삭제</button></div></div></div>
 <div class="pnl" id="layS">
   <div class="scard"><div class="stit">🔧 점검항목</div><div id="ciEditor"></div><div class="s-add-row"><button onclick="addCI('check')">+ OK/NG</button><button onclick="addCI('text')">+ 수기</button></div><div class="s-btns"><button class="sb-save" onclick="saveCI()">적용</button><button class="sb-load" onclick="resetCI()">기본값</button></div><div class="s-btns" style="margin-top:4px"><button class="sb-export" onclick="exportCI()">TXT저장</button><button class="sb-import" onclick="document.getElementById('ciFile').click()">TXT불러오기</button><input type="file" id="ciFile" accept=".txt" onchange="importCI(event)"></div></div>
   <div class="scard"><div class="stit">🏭 점검구역</div><div id="zoneEditor"></div><div class="s-add-row"><button onclick="addZone()">+ 구역 추가</button></div><div class="s-btns"><button class="sb-save" onclick="saveZones()">적용 (새로고침)</button><button class="sb-load" onclick="resetZones()">기본값</button></div></div>
@@ -308,9 +308,16 @@ function openNgHist(zid,eq){
   else{c.innerHTML='';items.forEach(([rid,r])=>{
     const d=document.createElement('div');d.className='ng-hist-item';
     let ph='';if(r.photo)ph+=`<img src="${r.photo}" onclick="viewPhoto(this.src)">`;if(r.improvePhoto)ph+=`<img src="${r.improvePhoto}" onclick="viewPhoto(this.src)" style="border-color:var(--ok)">`;
-    d.innerHTML=`<div class="nhi-top"><span class="nhi-items">${r.itemName}</span><span class="nhi-at">${r.createdAt}</span></div>${r.reason?'<div class="nhi-reason">사유: '+r.reason+'</div>':''}${ph?'<div class="nhi-photos">'+ph+'</div>':''}<span class="nhi-status ${r.status==='open'?'open':'closed'}">${r.status==='open'?'미개선':'개선완료'}</span>${r.improveAt?'<span style="font-size:10px;color:#888;margin-left:6px">'+r.improveAt+'</span>':''}${r.improveDesc?'<div style="font-size:11px;color:var(--ok);margin-top:4px;font-weight:500">개선: '+r.improveDesc+'</div>':''}${r.status==='open'?`<button class="improve-btn" onclick="capImprove('${rid}')">📷 개선사진</button>`:''}`;
+    d.innerHTML=`<div class="nhi-top"><span class="nhi-items">${r.itemName}</span><span class="nhi-at">${r.createdAt}</span></div>${r.reason?'<div class="nhi-reason">사유: '+r.reason+'</div>':''}${ph?'<div class="nhi-photos">'+ph+'</div>':''}<span class="nhi-status ${r.status==='open'?'open':'closed'}">${r.status==='open'?'미개선':'개선완료'}</span>${r.improveAt?'<span style="font-size:10px;color:#888;margin-left:6px">'+r.improveAt+'</span>':''}${r.improveDesc?'<div style="font-size:11px;color:var(--ok);margin-top:4px;font-weight:500">개선: '+r.improveDesc+'</div>':''}<div style="display:flex;gap:4px;margin-top:6px">${r.status==='open'?`<button class="improve-btn" onclick="capImprove('${rid}')">📷 개선사진</button>`:''}<button style="padding:4px 8px;border:1.5px solid #ffcdd2;border-radius:4px;background:#fff;color:var(--ng);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit" onclick="delNgRpt('${rid}')">🗑 삭제</button></div>`;
     c.appendChild(d)})}
   document.getElementById('ngMo').classList.add('show');
+}
+function delNgRpt(rid){
+  if(!confirm('이 NG 레포트를 삭제하시겠습니까?'))return;
+  const r=ngReports[rid];delete ngReports[rid];persistNg();
+  // 모달 새로고침
+  const[zid,no]=r.key.split(/-(.+)/);const z=ZONES.find(x=>x.id===zid),eq=z?z.equip.find(e=>e.no===no):null;
+  if(eq)openNgHist(zid,eq);else closeNgMo();
 }
 async function capImprove(rid){const d=await takePhoto();if(!d)return;const desc=prompt('개선내용을 입력하세요:','');if(desc===null)return;const now=new Date();ngReports[rid].improvePhoto=d;ngReports[rid].improveDesc=desc||'';ngReports[rid].improveAt=document.getElementById('chkDate').value+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');ngReports[rid].status='closed';persistNg();const r=ngReports[rid],[zid,no]=r.key.split(/-(.+)/),z=ZONES.find(x=>x.id===zid),eq=z?z.equip.find(e=>e.no===no):null;if(eq)openNgHist(zid,eq)}
 function closeNgMo(){document.getElementById('ngMo').classList.remove('show')}
@@ -339,6 +346,20 @@ function renderHist(){
 }
 function editH(i){const h=hist[i];editIdx=i;res[h.key]={...h.chk,at:h.at,insp:h.insp,ts:h.ts};const[zid,no]=h.key.split(/-(.+)/);const z=ZONES.find(x=>x.id===zid),eq=z?z.equip.find(e=>e.no===no):null;if(eq)openMo(zid,eq)}
 function delH(i){if(!confirm('삭제?'))return;const h=hist[i];hist.splice(i,1);const lat=hist.find(x=>x.key===h.key&&(!clearTime||x.ts>clearTime));if(lat)res[h.key]={...lat.chk,at:lat.at,insp:lat.insp,ts:lat.ts};else delete res[h.key];persist();updEq(h.key);updSummary();renderHist()}
+
+function clearAllHist(){
+  if(!confirm('전체 점검 이력을 삭제하시겠습니까?\n\n이력과 설비 마킹이 모두 초기화됩니다.\nNG 레포트는 유지됩니다.'))return;
+  hist.length=0;Object.keys(res).forEach(k=>delete res[k]);
+  persist();allKeys().forEach(k=>updEq(k));updSummary();renderHist();
+  alert('전체 이력이 삭제되었습니다.');
+}
+function clearAllNgRpt(){
+  const cnt=Object.keys(ngReports).length;
+  if(!cnt){alert('NG 레포트가 없습니다.');return}
+  if(!confirm(`전체 NG 레포트 ${cnt}건을 삭제하시겠습니까?\n\n발생/개선 사진 데이터도 함께 삭제됩니다.`))return;
+  Object.keys(ngReports).forEach(k=>delete ngReports[k]);
+  persistNg();alert('전체 NG 레포트가 삭제되었습니다.');
+}
 
 // ===== 공통 이동 함수 =====
 function moveItem(arr,i,dir){const ni=i+dir;if(ni<0||ni>=arr.length)return;[arr[i],arr[ni]]=[arr[ni],arr[i]]}
